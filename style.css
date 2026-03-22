@@ -8,43 +8,39 @@
     --glass-border: rgba(255, 255, 255, 0.1);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-
-/* FIX: Menggunakan 100dvh dan Flexbox pada body agar ukuran tinggi 100% akurat di HP */
-body { 
-    background: var(--bg-main); color: var(--text-main); 
-    height: 100vh; height: 100dvh; /* 100dvh sangat ampuh mengatasi URL Bar di HP */
-    overflow: hidden; 
-    display: flex; flex-direction: column; 
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
 }
 
-/* --- Topbar --- */
+body { 
+    background: var(--bg-main); 
+    color: var(--text-main); 
+    height: 100vh; 
+    height: 100dvh; 
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column; 
+}
+
 .topbar {
     display: flex; justify-content: space-between; align-items: center;
     padding: 12px 16px; background: rgba(15,15,15,0.95); border-bottom: 1px solid #222;
     height: 54px; flex-shrink: 0;
+    user-select: none; 
 }
 .brand { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
 .logo-icon { color: var(--red-yt); font-size: 14px; }
 .badge-live { background: var(--red-yt); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; letter-spacing: 1px;}
 .now-playing { font-size: 13px; color: var(--text-dim); max-width: 50vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* --- Layout Utama --- */
 .app-layout {
     display: grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 16px;
-    flex: 1; min-height: 0; /* FIX: Layout akan otomatis berhenti tepat sebelum batas bawah layar */
+    flex: 1; min-height: 0; 
 }
 
-@media (max-width: 900px) {
-    .app-layout { 
-        display: flex; flex-direction: column; 
-        padding: 10px; gap: 10px; 
-    }
-    .player-section { order: 1; flex-shrink: 0; } /* Video dipaksa ke ATAS */
-    .sidebar { order: 2; flex: 1; min-height: 0; } /* Playlist dipaksa ke BAWAH */
-}
-
-/* --- Sidebar / Playlist --- */
 .sidebar {
     background: var(--bg-panel); border-radius: 12px; border: 1px solid #222;
     display: flex; flex-direction: column; overflow: hidden;
@@ -56,12 +52,10 @@ body {
 }
 .search-box input:focus { border-color: #555; }
 
-/* FIX: Tambahan padding-bottom agar item terbawah sangat leluasa diklik */
-.channel-list { flex: 1; overflow-y: auto; list-style: none; -webkit-overflow-scrolling: touch; padding-bottom: 24px; }
+.channel-list { flex: 1; overflow-y: auto; list-style: none; -webkit-overflow-scrolling: touch; padding-bottom: 24px; user-select: none; }
 .channel-list::-webkit-scrollbar { width: 6px; }
 .channel-list::-webkit-scrollbar-thumb { background: #444; border-radius: 6px; }
 
-/* Grup Kategori */
 .group-header {
     background: #111; padding: 10px 14px; font-size: 12px; font-weight: 800;
     color: #ccc; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 10px;
@@ -69,7 +63,6 @@ body {
 }
 .group-header:first-child { border-top: none; }
 
-/* Item Channel */
 .channel-item {
     display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer;
     transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03);
@@ -80,25 +73,30 @@ body {
 .ch-logo { width: 40px; height: 40px; border-radius: 8px; background: #000; object-fit: contain; flex-shrink: 0; border: 1px solid #222;}
 .ch-name { font-size: 14px; font-weight: 600; }
 
-/* --- Video Area --- */
 .player-section { 
     display: flex; flex-direction: column; gap: 10px; 
-    min-height: 0; /* FIX: Mencegah kontainer membesar melebihi grid parent di desktop */
+    min-height: 0; 
 }
 
 .video-container {
     background: #000; border-radius: 12px; overflow: hidden; position: relative;
-    /* aspect-ratio: 16/9; <-- PASTIKAN BARIS INI DIHAPUS */
-    flex: 1; /* FIX: Biarkan kontainer mengisi penuh sisa ruang secara fleksibel */
-    min-height: 0; /* FIX: Mencegah overflow vertikal ke bawah */
+    flex: 1; 
+    min-height: 0; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 video { width: 100%; height: 100%; object-fit: contain; }
 
-.hint-text { text-align: center; font-size: 12px; color: var(--text-dim); }
+.hint-text { 
+    position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%);
+    text-align: center; font-size: 12px; color: var(--text-dim); 
+    pointer-events: none; z-index: 5; 
+}
 
-/* --- Kontrol Overlay --- */
-.video-ui { position: absolute; inset: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 10; }
+.video-ui { 
+    position: absolute; inset: 0; pointer-events: none; 
+    transition: opacity 0.3s ease; z-index: 10; 
+    will-change: opacity; 
+}
 .video-ui.hidden { opacity: 0; }
 
 .controls-top-left {
@@ -110,7 +108,7 @@ video { width: 100%; height: 100%; object-fit: contain; }
     background: rgba(20,20,20,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 40px; height: 40px;
     border-radius: 8px; font-size: 18px; cursor: pointer; transition: 0.2s;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center; user-select: none;
 }
 .icon-btn:hover { background: rgba(255,255,255,0.2); }
 
@@ -118,9 +116,9 @@ video { width: 100%; height: 100%; object-fit: contain; }
     position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 16px 16px 16px;
     background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
 }
+
 #videoTitle { font-size: 18px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); pointer-events: auto;}
 
-/* --- SETTINGS PANEL (Glassmorphism & Sticky Scroll) --- */
 .glass-panel {
     position: absolute; top: 65px; left: 16px; z-index: 20;
     width: 280px; max-height: calc(100% - 80px);
@@ -132,7 +130,7 @@ video { width: 100%; height: 100%; object-fit: contain; }
 .panel-header {
     padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1);
     display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px;
-    background: rgba(20,20,20,0.8); border-radius: 12px 12px 0 0;
+    background: rgba(20,20,20,0.8); border-radius: 12px 12px 0 0; user-select: none;
 }
 .tabs { display: flex; gap: 8px; }
 .tab-btn {
@@ -141,9 +139,7 @@ video { width: 100%; height: 100%; object-fit: contain; }
 }
 .tab-btn.active { background: var(--red-yt); }
 
-.panel-body {
-    padding: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1;
-}
+.panel-body { padding: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; }
 .panel-body::-webkit-scrollbar { display: none; }
 
 .tab-content { display: none; flex-direction: column; gap: 4px; }
@@ -151,13 +147,12 @@ video { width: 100%; height: 100%; object-fit: contain; }
 
 .opt-btn {
     background: transparent; border: none; color: #eee; text-align: left; padding: 10px 12px;
-    border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s;
+    border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s; user-select: none;
 }
 .opt-btn:hover { background: rgba(255,255,255,0.1); }
 .opt-btn.active { background: linear-gradient(90deg, rgba(255,0,0,0.4), transparent); color: #fff; font-weight: bold; }
 .opt-btn small { display: block; color: #aaa; font-size: 11px; margin-top: 3px; font-weight: normal;}
 
-/* --- Toast --- */
 .toast-msg {
     position: absolute; bottom: 16px; left: 16px; background: rgba(0,0,0,0.8);
     padding: 10px 16px; border-radius: 8px; font-size: 12px; border: 1px solid #333;
@@ -165,9 +160,7 @@ video { width: 100%; height: 100%; object-fit: contain; }
 }
 .toast-msg.show { opacity: 1; }
 
-/* --- Mobile Responsiveness --- */
 @media (max-width: 900px) {
-    /* --- Layout & Video Fix (Tambahan Baru) --- */
     .app-layout { 
         display: flex; flex-direction: column; 
         padding: 10px; gap: 10px; 
@@ -175,21 +168,31 @@ video { width: 100%; height: 100%; object-fit: contain; }
     .player-section { order: 1; flex-shrink: 0; } 
     .video-container {
         flex: none; 
-        aspect-ratio: 16/9; /* Menjaga video tidak menciut di HP */
+        aspect-ratio: 16/9; 
     }
     .sidebar { order: 2; flex: 1; min-height: 0; border-radius: 8px; }
 
-    /* --- UI Kontrol (Kode Lama Kamu) --- */
     .controls-top-left { padding: 10px; }
     .icon-btn { width: 34px; height: 34px; font-size: 16px; }
     #videoTitle { font-size: 14px; }
     .glass-panel { top: 50px; left: 10px; width: 240px; max-height: calc(100% - 60px); }
 }
 
-/* Fullscreen Fixes */
-:fullscreen .video-container { border-radius: 0; aspect-ratio: auto; }
-:fullscreen .controls-top-left { padding: 20px; }
-:fullscreen .glass-panel { top: 70px; left: 20px; max-height: calc(100vh - 100px); }
+:fullscreen .video-container,
+:-webkit-full-screen .video-container { 
+    border-radius: 0; 
+    aspect-ratio: auto; 
+    width: 100%; 
+    height: 100%; 
+}
+
+:fullscreen .controls-top-left,
+:-webkit-full-screen .controls-top-left { padding: 20px; }
+
+:fullscreen .glass-panel,
+:-webkit-full-screen .glass-panel { top: 70px; left: 20px; max-height: calc(100vh - 100px); }
+
 @media (max-width: 900px) {
-    :fullscreen .glass-panel { top: 54px; left: 10px; width: 260px; }
+    :fullscreen .glass-panel,
+    :-webkit-full-screen .glass-panel { top: 54px; left: 10px; width: 260px; }
 }
