@@ -3,8 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<link rel="icon" type="image/png" href="favicon.svg">
-    <title>NatzPlayer - LIVE</title>
+    <link rel="icon" type="image/png" href="favicon.svg">
+    <title>Natz Player - Live Stream</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://bhonat.my.id">
+
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.compiled.js"></script>
 </head>
@@ -12,7 +16,7 @@
 
     <header class="topbar">
         <div class="brand">
-            <span class="logo-icon">▶</span> NatzPlayer
+            <span class="logo-icon">▶</span> Natz Player
             <span class="badge-live">LIVE</span>
         </div>
         <div class="now-playing" id="topbar-title">Memuat...</div>
@@ -21,7 +25,7 @@
     <main class="app-layout">
         <aside class="sidebar">
             <div class="search-box">
-                <input type="text" id="search" placeholder="Cari tayangan..." autocomplete="off">
+                <input type="text" id="search" placeholder="Cari tayangan..." autocomplete="off" aria-label="Cari tayangan">
             </div>
             <ul id="channel-list" class="channel-list"></ul>
         </aside>
@@ -30,11 +34,13 @@
             <div class="video-container" id="videoContainer">
                 <video id="video" autoplay muted playsinline></video>
 
+                <div class="hint-text" id="unmuteHint">Ketuk video untuk mengaktifkan suara</div>
+
                 <div id="videoUI" class="video-ui hidden">
                     
                     <div class="controls-top-left">
-                        <button id="btnSettings" class="icon-btn" title="Pengaturan">⚙</button>
-                        <button id="btnFs" class="icon-btn" title="Layar Penuh">⛶</button>
+                        <button id="btnSettings" class="icon-btn" title="Pengaturan" aria-label="Pengaturan">⚙</button>
+                        <button id="btnFs" class="icon-btn" title="Layar Penuh" aria-label="Layar Penuh">⛶</button>
                     </div>
 
                     <div class="controls-bottom">
@@ -59,12 +65,9 @@
 
                 <div id="toast" class="toast-msg"></div>
             </div>
-            
-            <div class="hint-text" id="unmuteHint">Ketuk video untuk mengaktifkan suara</div>
         </section>
     </main>
 
-    <script src="playlist.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
