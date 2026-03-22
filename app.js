@@ -1,4 +1,3 @@
-// --- MASUKKAN URL PLAYLIST.PHP DARI HOSTING KAMU DI SINI ---
 const PLAYLIST_URL = "https://bhonat.my.id/playlist/natz.php";
 
 let player;
@@ -14,16 +13,16 @@ const UI = {
     channelList: document.getElementById('channel-list'),
     search: document.getElementById('search'),
     toast: document.getElementById('toast'),
-    unmuteHint: document.getElementById('unmuteHint')
+    unmuteHint: document.getElementById('unmuteHint'),
+    tabBtns: document.querySelectorAll('.tab-btn'),
+    tabContents: document.querySelectorAll('.tab-content')
 };
 
-// Ikon Kategori
 const ICONS = {
     "Sports": "⚽", "Movies": "🎬", "News": "📰", "Entertainment": "🎭",
     "TV Lokal": "📺", "Music": "🎵", "Kids": "🧸", "Unsorted": "📺"
 };
 
-// Fungsi Baru: Mengambil data JSON dari hosting
 async function loadExternalPlaylist() {
     try {
         const response = await fetch(PLAYLIST_URL);
@@ -31,24 +30,20 @@ async function loadExternalPlaylist() {
         
         const data = await response.json();
         
-        // Urutkan channel berdasarkan property "order" dari yang terkecil ke terbesar
-        data.sort((a, b) => (a.order || 999) - (b.order || 999));
-        
-        window.CHANNELS = data; 
+        window.CHANNELS = data
+            .filter(c => c.enabled !== false)
+            .sort((a, b) => (a.order || 999) - (b.order || 999));
         
     } catch (error) {
         console.error("Error loading playlist:", error);
         showToast("Gagal memuat daftar channel");
-        window.CHANNELS = []; // Kosongkan jika gagal agar tidak error
+        window.CHANNELS = []; 
     }
 }
 
-// Inisialisasi Aplikasi (Sudah di-update)
 async function initApp() {
-    // 1. Download playlist dari hosting terlebih dahulu
     await loadExternalPlaylist();
 
-    // 2. Lanjutkan persiapan Shaka Player
     shaka.polyfill.installAll();
     if (!shaka.Player.isBrowserSupported()) return alert("Browser tidak didukung.");
 
@@ -58,19 +53,19 @@ async function initApp() {
     renderPlaylist();
     setupEventListeners();
 
-    // Auto-play channel pertama yang aktif
-    const firstChannel = window.CHANNELS?.find(c => c.enabled !== false);
-    if (firstChannel) loadChannel(firstChannel);
+    if (window.CHANNELS?.length > 0) {
+        loadChannel(window.CHANNELS[0]);
+    }
 }
 
-// Render Playlist ke Sidebar
 function renderPlaylist() {
     UI.channelList.innerHTML = '';
     const query = UI.search.value.toLowerCase();
-    const channels = (window.CHANNELS || []).filter(c => c.enabled !== false);
-
-    // Mengelompokkan channel
+    const channels = window.CHANNELS || [];
+    
+    const fragment = document.createDocumentFragment();
     const groups = {};
+
     channels.forEach(ch => {
         if (query && !ch.name.toLowerCase().includes(query)) return;
         const g = ch.group || "Unsorted";
@@ -79,12 +74,10 @@ function renderPlaylist() {
     });
 
     Object.keys(groups).forEach(groupName => {
-        // Header Grup
         const header = document.createElement('div');
         header.className = 'group-header';
         header.innerHTML = `<span>${ICONS[groupName] || ICONS["Unsorted"]}</span> ${groupName}`;
         
-        // Simpan status tutup/buka grup
         const isCollapsed = localStorage.getItem(`collapse_${groupName}`) === 'true';
         
         const listWrapper = document.createElement('div');
@@ -96,9 +89,8 @@ function renderPlaylist() {
             localStorage.setItem(`collapse_${groupName}`, willCollapse);
         };
 
-        UI.channelList.appendChild(header);
+        fragment.appendChild(header);
 
-        // Isi Channel
         groups[groupName].forEach(ch => {
             const item = document.createElement('li');
             item.className = 'channel-item';
@@ -114,18 +106,18 @@ function renderPlaylist() {
             listWrapper.appendChild(item);
         });
 
-        UI.channelList.appendChild(listWrapper);
+        fragment.appendChild(listWrapper);
     });
+
+    UI.channelList.appendChild(fragment);
 }
 
-// Memuat Tayangan
 async function loadChannel(ch) {
     try {
         UI.title.textContent = ch.name;
         UI.topbarTitle.textContent = "Sedang tayang: " + ch.name;
         UI.settingsPanel.style.display = 'none';
 
-        // Konfigurasi DRM
         const drmConfig = {};
         if (ch.drm) {
             if (ch.drm.type === 'clearkey' && ch.drm.key) {
@@ -140,7 +132,7 @@ async function loadChannel(ch) {
         await player.load(ch.url);
         
         buildSettingsMenu();
-        UI.video.play().catch(() => {}); // Abaikan error autoplay
+        UI.video.play().catch(() => {});
 
     } catch (e) {
         showToast("Gagal memuat tayangan");
@@ -148,7 +140,6 @@ async function loadChannel(ch) {
     }
 }
 
-// Membangun Menu Kualitas & Audio Dinamis
 function buildSettingsMenu() {
     const qTab = document.getElementById('tab-quality');
     const aTab = document.getElementById('tab-audio');
@@ -158,7 +149,6 @@ function buildSettingsMenu() {
     const isAbr = player.getConfiguration().abr.enabled;
     const activeTrack = tracks.find(t => t.active);
 
-    // --- Kualitas Video ---
     const heights = [...new Set(tracks.map(t => t.height).filter(Boolean))].sort((a,b) => b - a);
     
     qTab.appendChild(createOptBtn("Auto", "ABR Berjalan", isAbr, () => {
@@ -178,12 +168,9 @@ function buildSettingsMenu() {
         }));
     });
 
-    // --- Audio ---
     const audios = [...new Set(tracks.map(t => t.language || 'und'))];
-    const currentLang = player.getConfiguration().preferredAudioLanguage || (activeTrack ? activeTrack.language : 'und');
-
+    
     if (audios.length <= 1) {
-        // Jika cuma 1 bahasa, sembunyikan kerumitan
         aTab.appendChild(createOptBtn("Default", "Audio Utama", true, () => {}));
     } else {
         aTab.appendChild(createOptBtn("Auto", "Default System", !player.getConfiguration().preferredAudioLanguage, () => {
@@ -201,7 +188,6 @@ function buildSettingsMenu() {
     }
 }
 
-// Utility Membuat Tombol Opsi
 function createOptBtn(title, subtitle, isActive, onClick) {
     const btn = document.createElement('button');
     btn.className = `opt-btn ${isActive ? 'active' : ''}`;
@@ -210,11 +196,9 @@ function createOptBtn(title, subtitle, isActive, onClick) {
     return btn;
 }
 
-// Manajemen UI (Sentuhan, Fullscreen, Tab)
 function setupEventListeners() {
     UI.search.addEventListener('input', renderPlaylist);
 
-    // Kontrol Visibilitas UI Video
     const showUI = () => {
         UI.overlay.classList.remove('hidden');
         clearTimeout(hideUITimer);
@@ -226,39 +210,51 @@ function setupEventListeners() {
     UI.container.addEventListener('mousemove', showUI);
     UI.container.addEventListener('click', (e) => {
         showUI();
-        UI.video.muted = false; // Unmute saat diklik
+        UI.video.muted = false; 
         UI.unmuteHint.style.display = 'none';
         
-        // Tutup panel jika area luar diklik
         if(!e.target.closest('#settingsPanel') && !e.target.closest('#btnSettings')){
             UI.settingsPanel.style.display = 'none';
         }
     });
 
-    // Tombol Settings & Fullscreen
     document.getElementById('btnSettings').onclick = () => {
         const isHidden = UI.settingsPanel.style.display === 'none';
         UI.settingsPanel.style.display = isHidden ? 'flex' : 'none';
-        if(isHidden) clearTimeout(hideUITimer); // Tahan UI agar tidak hilang
+        if(isHidden) clearTimeout(hideUITimer); 
     };
 
-    document.getElementById('btnFs').onclick = () => {
-        if (!document.fullscreenElement) UI.container.requestFullscreen().catch(err => {});
-        else document.exitFullscreen();
+    document.getElementById('btnFs').onclick = async () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            try {
+                if (UI.container.requestFullscreen) await UI.container.requestFullscreen();
+                else if (UI.container.webkitRequestFullscreen) await UI.container.webkitRequestFullscreen();
+                else if (UI.video.webkitEnterFullscreen) UI.video.webkitEnterFullscreen(); 
+
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            } catch (err) {
+                console.log("Gagal masuk fullscreen:", err);
+            }
+        } else {
+            if (document.exitFullscreen) await document.exitFullscreen();
+            else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+            
+            if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+        }
     };
 
-    // Tab Panel Settings (Quality vs Audio)
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    UI.tabBtns.forEach(btn => {
         btn.onclick = () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            UI.tabBtns.forEach(b => b.classList.remove('active'));
+            UI.tabContents.forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById(`tab-${btn.dataset.target}`).classList.add('active');
         };
     });
 }
 
-// Helper: Hex to Base64 (Untuk ClearKey DRM)
 function hexToBase64(hex) {
     const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
