@@ -1,3 +1,6 @@
+// --- MASUKKAN URL PLAYLIST.PHP DARI HOSTING KAMU DI SINI ---
+const PLAYLIST_URL = "https://bhonat.my.id/playlist/natz.php";
+
 let player;
 let hideUITimer;
 
@@ -20,8 +23,32 @@ const ICONS = {
     "TV Lokal": "📺", "Music": "🎵", "Kids": "🧸", "Unsorted": "📺"
 };
 
-// Inisialisasi Aplikasi
+// Fungsi Baru: Mengambil data JSON dari hosting
+async function loadExternalPlaylist() {
+    try {
+        const response = await fetch(PLAYLIST_URL);
+        if (!response.ok) throw new Error("Gagal terhubung ke server playlist");
+        
+        const data = await response.json();
+        
+        // Urutkan channel berdasarkan property "order" dari yang terkecil ke terbesar
+        data.sort((a, b) => (a.order || 999) - (b.order || 999));
+        
+        window.CHANNELS = data; 
+        
+    } catch (error) {
+        console.error("Error loading playlist:", error);
+        showToast("Gagal memuat daftar channel");
+        window.CHANNELS = []; // Kosongkan jika gagal agar tidak error
+    }
+}
+
+// Inisialisasi Aplikasi (Sudah di-update)
 async function initApp() {
+    // 1. Download playlist dari hosting terlebih dahulu
+    await loadExternalPlaylist();
+
+    // 2. Lanjutkan persiapan Shaka Player
     shaka.polyfill.installAll();
     if (!shaka.Player.isBrowserSupported()) return alert("Browser tidak didukung.");
 
@@ -31,7 +58,7 @@ async function initApp() {
     renderPlaylist();
     setupEventListeners();
 
-    // Auto-play channel pertama
+    // Auto-play channel pertama yang aktif
     const firstChannel = window.CHANNELS?.find(c => c.enabled !== false);
     if (firstChannel) loadChannel(firstChannel);
 }
